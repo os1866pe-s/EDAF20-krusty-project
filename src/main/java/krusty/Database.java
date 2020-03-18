@@ -3,6 +3,7 @@ package krusty;
 import spark.Request;
 import spark.Response;
 
+import java.sql.*;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
@@ -10,22 +11,49 @@ import java.util.TreeMap;
 import static krusty.Jsonizer.toJson;
 
 public class Database {
+
 	/**
-	 * Modify it to fit your environment and then use this string when connecting to your database!
+	 * The database connection.
 	 */
-	private static final String jdbcString = "jdbc:mysql://localhost/krusty";
+	private Connection conn;
 
-	// For use with MySQL or PostgreSQL
-	private static final String jdbcUsername = "<CHANGE ME>";
-	private static final String jdbcPassword = "<CHANGE ME>";
-
+	/**
+	 * Connects to the local sqlite database
+	 * */
 	public void connect() {
-		// Connect to database here
+		try {
+			conn = DriverManager.getConnection(
+					"jdbc:sqlite:src/main/resources/public/krusty_database.db");
+		} catch (SQLException e) {
+			System.err.println(e);
+			e.printStackTrace();
+		}
 	}
 
 	// TODO: Implement and change output in all methods below!
 
 	public String getCustomers(Request req, Response res) {
+		String query;
+
+		String requestedName = req.queryParams("name");
+
+		//Create a sql query builder
+		//String query = new Builder().addWhere("name", requestedName).build()
+
+		if (requestedName != null){
+			query = "SELECT * FROM Customers WHERE name = ?";
+		}else{
+			query = "SELECT * FROM Customers";
+		}
+
+		try(PreparedStatement statement = conn.prepareStatement(query)){
+			if (requestedName != null){
+				statement.setString(1, requestedName);
+			}
+			return Jsonizer.toJson(statement.executeQuery(), "customers");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return "{}";
 	}
 
@@ -49,6 +77,7 @@ public class Database {
 		return "{}";
 	}
 
+	//LAST_INSERT_ID() could be used here
 	public String createPallet(Request req, Response res) {
 		return "{}";
 	}

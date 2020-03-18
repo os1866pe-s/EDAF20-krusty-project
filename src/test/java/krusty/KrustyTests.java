@@ -23,7 +23,7 @@ import com.mashape.unirest.http.exceptions.UnirestException;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class KrustyTests {
-	public static final String BASE_URL = "http://localhost:" + ServerMain.PORT + "/";
+	public static final String BASE_URL = "http://localhost:" + ServerMain.PORT + "/api/v1/";
 	
 	/**
 	 *

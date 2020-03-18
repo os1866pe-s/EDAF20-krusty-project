@@ -10,12 +10,12 @@ import java.nio.charset.StandardCharsets;
 import static spark.Spark.*;
 
 public class ServerMain {
-	public static int PORT = 8888;
+	public static int PORT = 8787;
 	public static String API_ENTRYPOINT = "/api/v1";
 	
 	private Database db;
 
-	//Browser ip http://127.0.0.1:8888/
+	//Browser ip http://127.0.0.1:8787/
 
 	public void startServer() {
 		staticFiles.location("/public");
