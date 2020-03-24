@@ -20,12 +20,14 @@ public class Database {
 	/**
 	 * Connects to the local sqlite database
 	 */
-	public void connect() {
+	public void connect(boolean foreignKeysOn) {
 		try {
-			conn = DriverManager.getConnection(
-					connectionString);
+			SQLiteConfig config = new SQLiteConfig();
+			config.enforceForeignKeys(foreignKeysOn);
+			conn = DriverManager.getConnection(connectionString, config.toProperties());
+			conn.setClientInfo(config.toProperties());
 		} catch (SQLException e) {
-			System.err.println(e);
+			//System.err.println(e);
 			e.printStackTrace();
 		}
 	}
@@ -136,7 +138,7 @@ public class Database {
 
 	public String reset(Request req, Response res) {
 
-		setForeignKeyChecks(false);
+		connect(false);
 		removeAllRowsInTable("Customers");
 		removeAllRowsInTable("Ingredients");
 		removeAllRowsInTable("Pallets");
@@ -179,7 +181,7 @@ public class Database {
 		insertIngredient("Vanilla sugar",500000, "g");
 		insertIngredient("Wheat flour",500000, "g");
 
-		setForeignKeyChecks(true);
+		connect(true);
 		return "{}";
 	}
 
@@ -194,19 +196,6 @@ public class Database {
 			}
 	}
 
-	private void setForeignKeyChecks(boolean value){
-		if (!value){
-			try {
-				SQLiteConfig config = new SQLiteConfig();
-				config.enforceForeignKeys(false);
-				conn = DriverManager.getConnection(connectionString, config.toProperties());
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-			}
-		}else{
-			connect();
-		}
-	}
 
 	private void insertCustomer(String name, String address){
 		String query = "INSERT INTO Customers(name, address) VALUES (?,?);";
@@ -268,7 +257,7 @@ public class Database {
 
 			int palletId = getLastInsertedId();
 			if (palletId > -1) {
-				makeCookiePallet(cookie);
+				makeCookiePallet_2(cookie);
 				return "{\"status\":\"ok\",\"id\":" + palletId + "}";
 			}
 
@@ -278,6 +267,32 @@ public class Database {
 		return "{\"status\":\"error\"}";
 	}
 
+	/**
+	 * Alternativ 2
+	 * */
+	private void makeCookiePallet_2(String cookie){
+		String query = "update Ingredients " +
+				"SET amount = amount - ((SELECT quantity FROM IngredientsInCookies " +
+				  "WHERE (Ingredients.name = IngredientsInCookies.ingredient_name) " +
+				  "AND (IngredientsInCookies.cookie_name = ?)" +
+				") * 54) " +
+				"WHERE EXISTS (SELECT * FROM IngredientsInCookies " +
+				  "WHERE (Ingredients.name = IngredientsInCookies.ingredient_name) " +
+				  "AND (IngredientsInCookies.cookie_name = ?)" +
+				");";
+
+			try (PreparedStatement statement = conn.prepareStatement(query)) {
+				statement.setString(1, cookie);
+				statement.setString(2, cookie);
+				statement.executeUpdate();
+			}catch (SQLException e){
+				e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Alternativ 1
+	 * */
 	private void makeCookiePallet(String cookie) {
 
 		Map<String, Integer> ingredientsInCookie = getIngredientsInCookie(cookie);
