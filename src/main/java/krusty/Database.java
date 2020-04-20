@@ -25,9 +25,7 @@ public class Database {
 			SQLiteConfig config = new SQLiteConfig();
 			config.enforceForeignKeys(foreignKeysOn);
 			conn = DriverManager.getConnection(connectionString, config.toProperties());
-			conn.setClientInfo(config.toProperties());
 		} catch (SQLException e) {
-			//System.err.println(e);
 			e.printStackTrace();
 		}
 	}

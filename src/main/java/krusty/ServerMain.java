@@ -1,6 +1,5 @@
 package krusty;
 
-import com.google.protobuf.compiler.PluginProtos;
 import spark.utils.IOUtils;
 
 import java.io.IOError;
